@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Management.Automation;
+using System.Reflection;
 using System.Threading;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
@@ -23,10 +24,11 @@ namespace CodeOwls.Google.Drive.Provider
 
         private void Authorize()
         {
-            
 
+            var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            assemblyPath = Path.Combine(assemblyPath, "client_secret.json");
             using (var stream =
-                new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
+                new FileStream(assemblyPath, FileMode.Open, FileAccess.Read))
             {
                 string credPath = Environment.GetFolderPath(
                     Environment.SpecialFolder.Personal);

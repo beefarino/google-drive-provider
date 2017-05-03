@@ -11,12 +11,12 @@
 #>
 
 properties {
-	$config = 'Debug'; 	
+	$config = 'Debug';
 	$slnFile = @(
 		'./src/CodeOwls.Google.Drive.Provider.sln'
-	);	
-    $targetPath = "./src/CodeOwls.Google.Drive.Provider/bin";
-    
+	);
+    $targetPath = "./src/CodeOwls.Google.Drive.Provider/CodeOwls.Google.Drive.Provider/bin";
+
     $moduleName = "GoogleDrive";
 	$moduleSource = "./src/Modules";
     $metadataAssembly = 'CodeOwls.Google.Drive.Provider.dll';
@@ -33,29 +33,29 @@ task default -depends Install;
 task __VerifyConfiguration -description $private {
 	Assert ( @('Debug', 'Release') -contains $config ) "Unknown configuration, $config; expecting 'Debug' or 'Release'";
 	Assert ( Test-Path $slnFile ) "Cannot find solution, $slnFile";
-	
+
 	Write-Verbose ("packageDirectory: " + ( get-packageDirectory ));
 }
 
 task __CreatePackageDirectory -description $private {
-	get-packageDirectory | create-packageDirectory;		
+	get-packageDirectory | create-packageDirectory;
 }
 
 task __CreateModulePackageDirectory -description $private {
-	get-modulePackageDirectory | create-packageDirectory;		
+	get-modulePackageDirectory | create-packageDirectory;
 }
 
 # primary targets
 
 task Build -depends __VerifyConfiguration -description "builds any outdated dependencies from source" {
-	exec { 
-		msbuild $slnFile /p:Configuration=$config /t:Build 
+	exec {
+		msbuild $slnFile /p:Configuration=$config /t:Build
 	}
 }
 
 task Clean -depends __VerifyConfiguration,CleanModule -description "deletes all temporary build artifacts" {
-	exec { 
-		msbuild $slnFile /p:Configuration=$config /t:Clean 
+	exec {
+		msbuild $slnFile /p:Configuration=$config /t:Clean
 	}
 }
 
@@ -66,7 +66,7 @@ task Package -depends PackageModule -description "assembles distributions in the
 # clean tasks
 
 task CleanModule -depends __CreateModulePackageDirectory -description "clears the module package staging area" {
-    get-modulePackageDirectory | 
+    get-modulePackageDirectory |
         remove-item -recurse -force;
 }
 
@@ -77,16 +77,16 @@ task PackageModule -depends CleanModule,Build,__CreateModulePackageDirectory -de
     $psdFile = "$mp/$moduleName/$moduleName.psd1";
     $bin = "$mp/$moduleName/bin";
 	$version = get-packageVersion;
-    
+
     write-verbose "package module $moduleName in $mp with version $version";
-    
+
 	# copy module src hive to distribution hive
 	Copy-Item $moduleSource -container -recurse -Destination $mp -Force;
-	
+
 	# copy bins to module bin area
     mkdir $bin -force | out-null;
 	get-targetOutputPath | ls | copy-item -dest $bin -recurse -force;
-    
+
     $psd = get-content $psdFile;
     $psd -replace "ModuleVersion = '[\d\.]+'","ModuleVersion = '$version'" | out-file $psdFile;
 }
@@ -98,7 +98,7 @@ task Uninstall -description "uninstalls the module from the local user module re
 	if( Test-Path $modulePath )
 	{
 		Write-Verbose "uninstalling from local module repository at $modulePath";
-		
+
 		$modulePath | ri -Recurse -force;
 	}
 }
@@ -115,9 +115,9 @@ task Install -depends InstallModule -description "installs the module to the loc
 task InstallModule -depends PackageModule -description "installs the module to the local user module repository" {
 	$packagePath = get-modulePackageDirectory;
 	$modulePath = $Env:PSModulePath -split ';' | select -First 1;
-		
 
-	ls $packagePath | Copy-Item -recurse -Destination $modulePath -Force -verbose;	
+
+	ls $packagePath | Copy-Item -recurse -Destination $modulePath -Force -verbose;
 }
 
 function get-packageDirectory
@@ -140,7 +140,7 @@ function create-PackageDirectory( [Parameter(ValueFromPipeline=$true)]$packageDi
     		Write-Verbose "creating package directory at $packageDirectory ...";
     		mkdir $packageDirectory | Out-Null;
     	}
-    }    
+    }
 }
 
 function get-targetOutputPath
