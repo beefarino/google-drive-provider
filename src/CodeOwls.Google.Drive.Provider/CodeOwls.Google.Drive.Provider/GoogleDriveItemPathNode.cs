@@ -7,6 +7,7 @@ using System.Management.Automation.Provider;
 using CodeOwls.PowerShell.Paths;
 using CodeOwls.PowerShell.Provider.PathNodeProcessors;
 using CodeOwls.PowerShell.Provider.PathNodes;
+using Google.Apis.Download;
 using Google.Apis.Drive.v3;
 using Google.Apis.Drive.v3.Data;
 using Google.Apis.Requests;
@@ -76,18 +77,43 @@ namespace CodeOwls.Google.Drive.Provider
         {
             var p = providerContext.DynamicParameters as GetContentDynamicParameters;
             var export = _service.Files.Export(_file.Id, p.MimeType);
-            
+
             var stream = new MemoryStream();
-            //providerContext.WriteProgress();
+            
             export.Download(stream);
             stream.Position = 0;
+
             var reader = new GoogleExporedFileContentReader(stream);
             return reader;
         }
 
         public class GetContentDynamicParameters
-        {
+        {          
             [Parameter(Mandatory = true)]
+            [ValidateSet( new [] {
+                "text/html",
+                "application/zip",
+                "text/plain",
+                "application/rtf",
+                "application/vnd.oasis.opendocument.text",
+                "application/pdf",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/epub+zip",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/x-vnd.oasis.opendocument.spreadsheet",
+                "application/pdf",
+                "text/csv",
+                "text/tab-separated-values",
+                "application/zip",
+                "image/jpeg",
+                "image/png",
+                "image/svg+xml",
+                "application/pdf",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "application/vnd.oasis.opendocument.presentation",
+                "application/pdf",
+                "text/plain",
+                "application/vnd.google-apps.script+json"})]
             public string MimeType { get; set; }
         }
         public object GetContentReaderDynamicParameters(IProviderContext providerContext)
