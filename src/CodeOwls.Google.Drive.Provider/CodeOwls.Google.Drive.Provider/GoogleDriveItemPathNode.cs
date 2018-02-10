@@ -35,7 +35,7 @@ namespace CodeOwls.Google.Drive.Provider
             req.PageSize = 1000;
             req.OrderBy = "name";
             req.Q = String.Format("'{0}' in parents", ParentId);
-
+            req.Fields = "nextPageToken,files(id,name,kind,mimeType,createdTime,sharingUser,shared,size,modifiedTime,parents)";
             var folders = new List<IPathNode>();
             var files = new List<IPathNode>();
 

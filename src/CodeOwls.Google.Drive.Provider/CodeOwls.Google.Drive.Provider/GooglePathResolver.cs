@@ -11,7 +11,7 @@ namespace CodeOwls.Google.Drive.Provider
     {
         private readonly DriveService _driveService;
         private static Dictionary< string, IEnumerable<IPathNode>> Cache = new Dictionary<string, IEnumerable<IPathNode>>();
-
+        
         public GooglePathResolver( DriveService driveService )
         {
             _driveService = driveService;

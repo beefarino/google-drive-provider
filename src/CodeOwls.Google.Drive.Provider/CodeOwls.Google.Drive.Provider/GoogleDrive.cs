@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 using System.Threading;
@@ -16,7 +18,12 @@ namespace CodeOwls.Google.Drive.Provider
 {
     public class GoogleDrive : PowerShell.Provider.Drive
     {
-        private static string[] Scopes = {DriveService.Scope.DriveReadonly};
+        private static string[] Scopes =
+        {
+            DriveService.Scope.DriveReadonly,
+            SheetsService.Scope.SpreadsheetsReadonly
+        };
+
         private static string ApplicationName = "PowerShell Provider for Google Drive";
 
         UserCredential credential;
@@ -64,11 +71,22 @@ namespace CodeOwls.Google.Drive.Provider
                 ApplicationName = ApplicationName,
             });
 
-            var request = service.Spreadsheets.Values.Get(sheetId, tabName + "!A1:Z65535");
+            var request = service.Spreadsheets.Values.Get(sheetId, tabName + "!A1:ZZ65535");
             request.MajorDimension = SpreadsheetsResource.ValuesResource.GetRequest.MajorDimensionEnum.ROWS;
             var result = request.Execute();
-            return result;
-
+            var header = result.Values[0];
+            var output = new List<PSObject>();
+            foreach (var row in result.Values.Skip(1))
+            {
+                var pso = new PSObject();
+                pso.TypeNames.Add(sheetId + "." + tabName);
+                for (int i = 0; i < header.Count; ++i)
+                {
+                    pso.Members.Add(new PSNoteProperty(header[i].ToString(), row[i]));
+                }
+                output.Add(pso);
+            }
+            return output;
         }
 
         public object GetFilesMatchingName(string name)
@@ -82,6 +100,7 @@ namespace CodeOwls.Google.Drive.Provider
             req.PageSize = 1000;
             req.OrderBy = "name";
             req.Q = String.Format("name contains '{0}'", name);
+            req.Fields = "nextPageToken,files(id,name,kind,mimeType,createdTime,sharingUser,shared,size,modifiedTime,parents)";
 
             return pageStreamer.Fetch(req);
         }
